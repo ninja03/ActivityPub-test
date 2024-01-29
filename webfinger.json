@@ -1,0 +1,10 @@
+{
+    "subject": "acct:@taisukef@taisuke.fukuno.com",
+    "links": [
+        {
+            "rel":  "self",
+            "type": "application/activity+json",
+            "href": "https://taisuke.fukuno.com/"
+        },
+    ]
+}

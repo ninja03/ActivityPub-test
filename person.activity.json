@@ -1,0 +1,16 @@
+{
+    "@context": "https://www.w3.org/ns/activitystreams",
+    "type": "Person",
+    "id": "https://taisuke.fukuno.com/",
+    "name": "taisukef",
+    "preferredUsername": "taisukef",
+    "summary": "my simple activitypub",
+    "inbox": "https://taisuke.fukuno.com/inbox",
+    "outbox": "https://taisuke.fukuno.com/outbox",
+    "url": "https://taisuke.fukuno.com/",
+    "icon": {
+        "type": "Image",
+        "mediaType": "image/jpeg",
+        "url": "https://taisuke.fukuno.com/icon.jpg"
+    }
+}
