@@ -5,6 +5,6 @@
             "rel":  "self",
             "type": "application/activity+json",
             "href": "https://taisuke.fukuno.com/"
-        },
+        }
     ]
 }
