@@ -9,4 +9,6 @@ const opt = {
 };
 const json = await (await fetch(url, opt)).json();
 console.log(json);
-await Deno.writeTextFile("mastodon_taisukef.json", JSON.stringify(json, null, 2));
+const fn0 = url.substring(url.lastIndexOf("/") + 1);
+const fn = fn0.endsWith(".json") ? fn0 : fn0 + ".json";
+await Deno.writeTextFile(fn, JSON.stringify(json, null, 2));
