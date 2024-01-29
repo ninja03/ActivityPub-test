@@ -7,7 +7,7 @@ Deno.serve({
   hostname: "[::]",
   handler: async (request, info) => {
     const path = new URL(request.url).pathname;
-    console.log(path);
+    console.log(request, path);
     if (path == "/") {
       const data = await Deno.readTextFile("./person.activity.json");
       return new Response(data, {
