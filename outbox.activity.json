@@ -7,25 +7,25 @@
     {
       "@context": "https://www.w3.org/ns/activitystreams",
       "type": "Create",
-      "id": "https://taisuke.fukuno.com/post/activities/act-yyyy-mm-dd.create.json",
-      "url": "https://taisuke.fukuno.com/post/activities/act-yyyy-mm-dd.create.json",
+      "id": "https://example.com/post/activities/act-yyyy-mm-dd.create.json",
+      "url": "https://example.com/post/activities/act-yyyy-mm-dd.create.json",
       "published": "2023-01-16T06:48:29Z",
       "to": [
         "http://taisuke.fukuno.com/followers",
         "https://www.w3.org/ns/activitystreams#Public"
       ],
-      "actor": "https://taisuke.fukuno.com/",
+      "actor": "https://example.com/",
       "object": {
         "@context": "https://www.w3.org/ns/activitystreams",
         "type": "Note",
-        "id": "https://taisuke.fukuno.com/items/note.1.activity.json",
-        "url": "https://taisuke.fukuno.com/items/note.1.activity.json",
+        "id": "https://example.com/items/note.1.activity.json",
+        "url": "https://example.com/items/note.1.activity.json",
         "published": "2023-01-16T06:48:29Z",
         "to": [
-          "https://taisuke.fukuno.com/followers",
+          "https://example.com/followers",
           "https://www.w3.org/ns/activitystreams#Public"
         ],
-        "attributedTo": "https://taisuke.fukuno.com/",
+        "attributedTo": "https://example.com/",
         "content": "test by taisukef"
       }
     }

@@ -1,16 +1,18 @@
 {
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Person",
-    "id": "https://taisuke.fukuno.com/",
+    "id": "https://example.com/",
     "name": "taisukef",
     "preferredUsername": "taisukef",
     "summary": "my simple activitypub",
-    "inbox": "https://taisuke.fukuno.com/inbox",
-    "outbox": "https://taisuke.fukuno.com/outbox",
-    "url": "https://taisuke.fukuno.com/",
+    "following": "https://example.com/following",
+    "followers": "https://example.com/followers",
+    "inbox": "https://example.com/inbox",
+    "outbox": "https://example.com/outbox",
+    "url": "https://example.com/",
     "icon": {
         "type": "Image",
         "mediaType": "image/webp",
-        "url": "https://taisuke.fukuno.com/icon.webp"
+        "url": "https://example.com/icon.webp"
     }
 }

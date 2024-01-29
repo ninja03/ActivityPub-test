@@ -1,0 +1,7 @@
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "id": "https://mastodon.social/users/taisukef/followers",
+  "type": "OrderedCollection",
+  "totalItems": 0,
+  "first": "https://example.com/followers?page=1"
+}
