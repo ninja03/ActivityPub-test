@@ -1,0 +1,16 @@
+{
+  "openRegistrations": false,
+  "protocols": [
+    "activitypub"
+  ],
+  "software": {
+    "name": "ActivityPub-test",
+    "version": "0.1.0"
+  },
+  "usage": {
+    "users": {
+      "total": 1
+    }
+  },
+  "version": "2.1"
+}
