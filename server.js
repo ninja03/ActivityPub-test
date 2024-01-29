@@ -1,6 +1,12 @@
 import { handleWeb } from "https://code4fukui.github.io/wsutil/handleWeb.js";
+import { DateTime, TimeZone } from "https://js.sabae.cc/DateTime.js";
 
 const port = Deno.args[0] || 8000;
+
+const getParam = async (request) => {
+  if (request.method != "POST") return null;
+  return await request.json();
+};
 
 Deno.serve({
   port,
@@ -33,6 +39,14 @@ Deno.serve({
         headers: { "Content-Type": "application/jrd+json; charset=utf-8" },
       });
     } else if (path == "/inbox") {
+      const param = await getParam(request);
+      console.log("get inbox: ", param);
+      if (param) {
+        const d = new DateTime().toLocal(TimeZone.JST);
+        console.log(d);
+        await Deno.mkdir("inbox", { recursive: true });
+        await Deno.writeTextFile("inbox/" + d.day.toStringYMD() + "_" + d.time.toStringHMS() + ".json", JSON.stringify(param, null, 2));
+      }
       const data = await Deno.readTextFile("inbox.activity.json");
       return new Response(data, {
         status: 200,
