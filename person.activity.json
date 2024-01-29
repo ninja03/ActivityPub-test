@@ -10,7 +10,7 @@
     "url": "https://taisuke.fukuno.com/",
     "icon": {
         "type": "Image",
-        "mediaType": "image/jpeg",
-        "url": "https://taisuke.fukuno.com/icon.jpg"
+        "mediaType": "image/webp",
+        "url": "https://taisuke.fukuno.com/icon.webp"
     }
 }

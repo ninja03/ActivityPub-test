@@ -7,7 +7,7 @@ Deno.serve({
   hostname: "[::]",
   handler: async (request, info) => {
     const path = new URL(request.url).pathname;
-    console.log(request, path);
+    console.log(request, request.headers.accept, path);
     if (path == "/nodeinfo/2.1") {
       const data = await Deno.readTextFile("./nodeinfo.json");
       return new Response(data, {
