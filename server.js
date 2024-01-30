@@ -1,5 +1,6 @@
 import { handleWeb } from "https://code4fukui.github.io/wsutil/handleWeb.js";
 import { DateTime, TimeZone } from "https://js.sabae.cc/DateTime.js";
+import { OrderedCollection, Note, ActivityCreate } from "./LinkedObject.js";
 
 const port = Deno.args[0] || 8000;
 
@@ -29,6 +30,11 @@ const reply = async (fn) => {
   const data2 = entrypoint ? data.replace(/https:\/\/example.com\//g, entrypoint) : data;
   return new Response(data2, { status: 200, headers: { "Content-Type": ctype } });
 };
+const replyAJSON = (json) => {
+  const data = JSON.stringify(json, null, 2);
+  const ctype = map[".activity.json"];
+  return new Response(data, { status: 200, headers: { "Content-Type": ctype } });
+};
 
 const getParam = async (request) => {
   if (request.method != "POST") return null;
@@ -44,11 +50,20 @@ const writeLog = async (name, param) => {
   await Deno.writeTextFile(fn, JSON.stringify(param, null, 2));
 };
 
+const baseid = "https://taisuke.fukuno.com/"
+
+const items = [
+  new ActivityCreate(new Note(baseid + "id1", "name1", "content1")),
+  new ActivityCreate(new Note(baseid + "id2", "name2", "content2")),
+];
+const outbox = new OrderedCollection(baseid + "outbox", items);
+
 Deno.serve({
   port,
   hostname: "[::]",
   handler: async (request, info) => {
-    const path = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const path = url.pathname;
     console.log(request, request.headers.accept, path);
     if (path == "/nodeinfo/2.1") {
       return await reply("./nodeinfo.json");
@@ -63,7 +78,12 @@ Deno.serve({
     } else if (path == "/followers") {
       return await reply("./followers.activity.json");
     } else if (path == "/outbox") {
-      return await reply("./outbox.activity.json");
+      //return await reply("./outbox.activity.json");
+      const n = url.searchParams.get("page");
+      if (n !== undefined) {
+        return replyAJSON(outbox.getPage(n));
+      }
+      return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const param = await getParam(request);
       await writeLog("inbox", param);
