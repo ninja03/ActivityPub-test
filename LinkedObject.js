@@ -31,7 +31,6 @@ export class OrderedCollectionPage extends LinkedObject {
     this.totalItems = items.length;
     this.next = id + "?page=" + (page + 1);
     this.prev = id + "?page=" + (page - 1);
-    const n = 1 + Math.floor(items.length / nitemspp);
     const items2 = [];
     for (let i = 0; i < nitemspp; i++) {
       const idx = (page - 1) * nitemspp + i;
@@ -59,10 +58,12 @@ export class OrderedCollection extends LinkedObject {
 }
 
 export class Note extends LinkedObject {
-  constructor(id, name, content) {
+  constructor(id, name, content, published, actor) {
     super("Note", id);
     this.name = name;
     this.content = content;
+    this.published = published;
+    this.actor = actor;
   }
 }
 

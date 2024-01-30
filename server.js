@@ -53,8 +53,8 @@ const writeLog = async (name, param) => {
 const baseid = "https://taisuke.fukuno.com/"
 
 const items = [
-  new ActivityCreate(new Note(baseid + "id1", "name1", "content1")),
-  new ActivityCreate(new Note(baseid + "id2", "name2", "content2")),
+  new ActivityCreate(new Note(baseid + "id1", "name1", "content1", "2024-01-29T07:48:29Z", baseid)),
+  new ActivityCreate(new Note(baseid + "id2", "name2", "content2", "2024-01-30T06:48:29Z", baseid)),
 ];
 const outbox = new OrderedCollection(baseid + "outbox", items);
 
