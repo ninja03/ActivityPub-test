@@ -1,7 +1,7 @@
 {
   "@context": "https://www.w3.org/ns/activitystreams",
-  "summary": "outbox",
   "type": "OrderedCollection",
+  "summary": "outbox",
   "totalItems": 1,
   "orderedItems": [
     {
@@ -9,7 +9,7 @@
       "type": "Create",
       "id": "https://example.com/post/activities/act-yyyy-mm-dd.create.json",
       "url": "https://example.com/post/activities/act-yyyy-mm-dd.create.json",
-      "published": "2023-01-16T06:48:29Z",
+      "published": "2024-01-30T06:48:29Z",
       "to": [
         "http://taisuke.fukuno.com/followers",
         "https://www.w3.org/ns/activitystreams#Public"
@@ -20,7 +20,7 @@
         "type": "Note",
         "id": "https://example.com/items/note.1.activity.json",
         "url": "https://example.com/items/note.1.activity.json",
-        "published": "2023-01-16T06:48:29Z",
+        "published": "2024-01-30T06:48:29Z",
         "to": [
           "https://example.com/followers",
           "https://www.w3.org/ns/activitystreams#Public"
