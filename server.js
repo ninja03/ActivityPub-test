@@ -106,6 +106,11 @@ Deno.serve({
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const param = await getParam(request);
+      console.log(param);
+      if (param.type == "Follow") {
+        await kv.set(["followers"], param.actor, { id: param.actor });
+        await acceptFollow(strName, strHost, x, y, private_key);
+      }
       // await writeLog("inbox", param);
       return await reply("./inbox.activity.json");
     } else if (path == "/outbox") {
