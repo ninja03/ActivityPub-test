@@ -145,14 +145,14 @@ Deno.serve({
       const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
       const content = JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
-        id: `${entryPoint}followers`,
+        id: `${entrypoint}followers`,
         type: 'OrderedCollection',
         first: {
           type: 'OrderedCollectionPage',
           totalItems: items.length,
-          partOf: `${entryPoint}followers`,
+          partOf: `${entrypoint}followers`,
           orderedItems: items,
-          id: `${entryPoint}followers?page=1`,
+          id: `${entrypoint}followers?page=1`,
         }
       });
       return await reply("./followers.activity.json", content);
@@ -297,14 +297,14 @@ export async function signHeaders(res, strInbox, privateKey) {
     Date: strTime,
     Digest: `SHA-256=${s256}`,
     Signature:
-      `keyId="${entryPoint}",` +
+      `keyId="${entrypoint}",` +
       `algorithm="rsa-sha256",` +
       `headers="(request-target) host date digest",` +
       `signature="${b64}"`,
     Accept: 'application/activity+json',
     'Content-Type': 'application/activity+json',
     'Accept-Encoding': 'gzip',
-    'User-Agent': `Minidon/0.0.0 (+${entryPoint})`,
+    'User-Agent': `Minidon/0.0.0 (+${entrypoint})`,
   }
   return headers
 }
@@ -318,9 +318,9 @@ export async function acceptFollow(x, y, privateKey) {
   console.log("strInbox", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entryPoint}s/${strId}`,
+    id: `${entrypoint}s/${strId}`,
     type: 'Accept',
-    actor: `${entryPoint}`,
+    actor: `${entrypoint}`,
     object: y,
   }
   const headers = await signHeaders(res, strInbox, privateKey)
@@ -336,21 +336,21 @@ export async function createNote(strId, x, y, privateKey) {
   console.log("createNote strInbox = ", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entryPoint}s/${strId}/activity`,
+    id: `${entrypoint}s/${strId}/activity`,
     type: 'Create',
-    actor: `${entryPoint}`,
+    actor: `${entrypoint}`,
     published: strTime,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
-    cc: [`${entryPoint}followers`],
+    cc: [`${entrypoint}followers`],
     object: {
-      id: `${entryPoint}s/${strId}`,
+      id: `${entrypoint}s/${strId}`,
       type: 'Note',
-      attributedTo: `${entryPoint}`,
+      attributedTo: `${entrypoint}`,
       content: y,
-      url: `${entryPoint}s/${strId}`,
+      url: `${entrypoint}s/${strId}`,
       published: strTime,
       to: ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: [`${entryPoint}followers`],
+      cc: [`${entrypoint}followers`],
     },
   }
   console.log("createNote res", res);
@@ -364,9 +364,9 @@ export async function deleteNote(x, y, privateKey) {
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entryPoint}s/${strId}/activity`,
+    id: `${entrypoint}s/${strId}/activity`,
     type: 'Delete',
-    actor: `${entryPoint}`,
+    actor: `${entrypoint}`,
     object: {
       id: y,
       type: 'Note',
