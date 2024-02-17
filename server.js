@@ -71,7 +71,14 @@ Deno.serve({
     const path = url.pathname;
     // console.log(request, request.headers.accept, path);
     console.log("-------" + path + "-------");
-    if (path == "/add-note") {
+    if (path == "/reset") {
+      for await (const message of kv.list({ prefix: ["messages"]})) {
+        await kv.delete(message.key);
+      }
+      for await (const follower of kv.list({ prefix: ["followers"]})) {
+        await kv.delete(follower.key);
+      }
+    } else if (path == "/add-note") {
       // const form = await request.formData();
       // const messageBody = form.get("message") ?? (new Date().toString() + "です");
       const messageBody = "テスト!";
@@ -93,7 +100,7 @@ Deno.serve({
 
       console.log("<-followers");
       return new Response("投稿しました");
-    }if (path == "/nodeinfo/2.1") {
+    } else if (path == "/nodeinfo/2.1") {
       if (true) return new Response(null, { status: 404});
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
