@@ -78,7 +78,7 @@ Deno.serve({
       const messageId = crypto.randomUUID();
       const PRIVATE_KEY = await importprivateKey(ID_RSA);
 
-      await kv.set(["messages", messageBody], {
+      await kv.set(["messages", messageId], {
         id: messageId,
         body: messageBody
       });
