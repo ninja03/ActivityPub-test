@@ -106,7 +106,7 @@ Deno.serve({
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const param = await getParam(request);
-      await writeLog("inbox", param);
+      // await writeLog("inbox", param);
       return await reply("./inbox.activity.json");
     } else if (path == "/outbox") {
       return await reply("./outbox.activity.json");
