@@ -122,6 +122,7 @@ Deno.serve({
       const y = await getParam(request);
       console.log("★y", y);
       const x = await getInbox(y.actor);
+      console.log("★x", x);
       const private_key = await importprivateKey(ID_RSA);
       
       if (y.type == "Follow") {
@@ -260,8 +261,10 @@ export async function signHeaders(res, strInbox, privateKey) {
 }
 
 export async function acceptFollow(x, y, privateKey) {
+  console.log("★acceptFollow", x, y, privateKey);
   const strId = crypto.randomUUID()
   const strInbox = x.inbox
+  console.log("strInbox", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
     id: `https://tama-city-test.deno.dev/s/${strId}`,
@@ -270,7 +273,9 @@ export async function acceptFollow(x, y, privateKey) {
     object: y,
   }
   const headers = await signHeaders(res, strInbox, privateKey)
+  console.log("headers", headers);
   await postInbox(strInbox, res, headers)
+  console.log("★end acceptFollow");
 }
 
 export async function createNote(strId, x, y, privateKey) {
