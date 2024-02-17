@@ -77,11 +77,15 @@ Deno.serve({
       const messageId = crypto.randomUUID();
       const PRIVATE_KEY = await importprivateKey(ID_RSA);
   
+      console.log("followers->");
       for await (const follower of kv.list({ prefix: ["followers"] })) {
+        console.log("follower.value", follower.value);
         const x = await getInbox(follower.value.id);
-        console.log(x);
+        console.log("x", x);
         await createNote(messageId, x, messageBody, PRIVATE_KEY);
       }
+      console.log("<-followers");
+      return new Response("投稿しました");
     }if (path == "/nodeinfo/2.1") {
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
