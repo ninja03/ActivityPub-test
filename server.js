@@ -111,7 +111,7 @@ Deno.serve({
       console.log(param);
       if (param.type == "Follow") {
         await kv.set(["followers"], param.actor, { id: param.actor });
-        await acceptFollow(strName, strHost, x, y, private_key);
+        await acceptFollow(x, y, private_key);
       }
       // await writeLog("inbox", param);
       return await reply("./inbox.activity.json");
@@ -240,14 +240,14 @@ export async function signHeaders(res, strName, strHost, strInbox, privateKey) {
   return headers
 }
 
-export async function acceptFollow(strName, strHost, x, y, privateKey) {
+export async function acceptFollow(x, y, privateKey) {
   const strId = crypto.randomUUID()
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://${strHost}/u/${strName}/s/${strId}`,
+    id: `https://tama-city-test.deno.dev/s/${strId}`,
     type: 'Accept',
-    actor: `https://${strHost}/u/${strName}`,
+    actor: `https://tama-city-test.deno.dev/`,
     object: y,
   }
   const headers = await signHeaders(res, strName, strHost, strInbox, privateKey)
