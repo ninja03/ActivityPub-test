@@ -10,7 +10,7 @@ const entrypoint = (await Deno.readTextFile("entrypoint.txt"))?.trim();
 if (!entrypoint) console.log("set your domain name on entrypoint.txt");
 
 const ID_RSA = Deno.env.get("ID_RSA");
-if (ID_RSA)  console.log("set ID_RSA");
+if (!ID_RSA)  console.log("set ID_RSA");
 
 const map = {
   ".activity.json": "application/activity+json; charset=utf-8",
@@ -79,6 +79,7 @@ Deno.serve({
   
       for await (const follower of kv.list({ prefix: ["followers"] })) {
         const x = await getInbox(follower.id);
+        console.log(x);
         await createNote(messageId, x, messageBody, PRIVATE_KEY);
       }
     }if (path == "/nodeinfo/2.1") {
@@ -117,7 +118,7 @@ Deno.serve({
       const y = await getParam(request);
       const x = await getInbox(y.actor);
       const private_key = await importprivateKey(ID_RSA);
-      console.log(y);
+      
       if (y.type == "Follow") {
         await kv.set(["followers", y.actor], { id: y.actor });
         await acceptFollow(x, y, private_key);
