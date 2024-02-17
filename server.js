@@ -6,8 +6,6 @@ const kv = await Deno.openKv();
 
 const port = Deno.args[0] || 8000;
 
-const ID_RSA = Deno.env.get("ID_RSA");
-
 let eventData;;
 async function updateEventData() {
   eventData = eval(await (await fetch("https://www.city.tama.lg.jp/event.js")).text() + ";event_data");
@@ -29,6 +27,8 @@ Deno.cron("teiki housou", "* * * * *", teiki);
 async function addNote(messageBody) {
   // const form = await request.formData();
   // const messageBody = form.get("message") ?? (new Date().toString() + "です");
+  const ID_RSA = Deno.env.get("ID_RSA");
+  if (!ID_RSA)  console.log("set ID_RSA");
   const messageId = crypto.randomUUID();
   const PRIVATE_KEY = await importprivateKey(ID_RSA);
 
@@ -50,6 +50,9 @@ async function addNote(messageBody) {
 
 const entrypoint = (await Deno.readTextFile("entrypoint.txt"))?.trim();
 if (!entrypoint) console.log("set your domain name on entrypoint.txt");
+
+const ID_RSA = Deno.env.get("ID_RSA");
+if (!ID_RSA)  console.log("set ID_RSA");
 
 const map = {
   ".activity.json": "application/activity+json; charset=utf-8",
