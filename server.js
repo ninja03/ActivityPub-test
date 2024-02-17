@@ -29,9 +29,9 @@ const getContextType = (fn) => {
   return "text/plain";
 };
 
-const reply = async (fn, contents) => {
+const reply = async (fn, content) => {
   const ctype = getContextType(fn);
-  const data = contents ?? await Deno.readTextFile(fn);
+  const data = content ?? await Deno.readTextFile(fn);
   const data2 = entrypoint ? data.replace(/https:\/\/example.com\//g, entrypoint) : data;
   return new Response(data2, { status: 200, headers: { "Content-Type": ctype } });
 };
@@ -90,7 +90,35 @@ Deno.serve({
     }if (path == "/nodeinfo/2.1") {
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
-      return await reply("./person.activity.json");
+      const PRIVATE_KEY = await importprivateKey(c.env.PRIVATE_KEY)
+      const PUBLIC_KEY = await privateKeyToPublicKey(PRIVATE_KEY)
+      const public_key_pem = await exportPublicKey(PUBLIC_KEY)
+
+      const content = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        "type": "Person",
+        "id": "https://example.com/",
+        "name": "tama",
+        "preferredUsername": "tama",
+        "summary": "tama city event",
+        "following": "https://example.com/following",
+        "followers": "https://example.com/followers",
+        "inbox": "https://example.com/inbox",
+        "outbox": "https://example.com/outbox",
+        "url": "https://example.com/",
+        "icon": {
+          "type": "Image",
+          "mediaType": "image/webp",
+          "url": "https://example.com/icon.webp"
+        },
+        publicKey: {
+          id: `https://example.com/`,
+          type: 'Key',
+          owner: `https://example.com`,
+          publicKeyPem: public_key_pem,
+        },
+      };
+      return await reply("./person.activity.json", content);
     } else if (path == "/.well-known/host-meta") {
       return await reply("./host-meta.xml");
     } else if (path == "/.well-known/webfinger") {
