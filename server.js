@@ -120,6 +120,7 @@ Deno.serve({
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const y = await getParam(request);
+      console.log("★y", y);
       const x = await getInbox(y.actor);
       const private_key = await importprivateKey(ID_RSA);
       
