@@ -105,6 +105,7 @@ Deno.serve({
     } else if (path == "/inbox") {
       const y = await getParam(request);
       const x = await getInbox(y.actor);
+      const private_key = await importprivateKey(ID_RSA);
       console.log(y);
       if (y.type == "Follow") {
         await kv.set(["followers", y.actor], { id: y.actor });
