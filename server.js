@@ -2,6 +2,8 @@ import { handleWeb } from "https://code4fukui.github.io/wsutil/handleWeb.js";
 import { DateTime, TimeZone } from "https://js.sabae.cc/DateTime.js";
 import { OrderedCollection, Note, ActivityCreate } from "./LinkedObject.js";
 
+const kv = await Deno.openKv();
+
 const port = Deno.args[0] || 8000;
 
 const entrypoint = (await Deno.readTextFile("entrypoint.txt"))?.trim();
