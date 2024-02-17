@@ -90,7 +90,7 @@ Deno.serve({
     }if (path == "/nodeinfo/2.1") {
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
-      const PRIVATE_KEY = await importprivateKey(c.env.PRIVATE_KEY)
+      const PRIVATE_KEY = await importprivateKey(ID_RSA)
       const PUBLIC_KEY = await privateKeyToPublicKey(PRIVATE_KEY)
       const public_key_pem = await exportPublicKey(PUBLIC_KEY)
 
