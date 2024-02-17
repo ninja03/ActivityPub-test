@@ -111,7 +111,7 @@ Deno.serve({
       const x = await getInbox(y.actor);
       console.log(y);
       if (y.type == "Follow") {
-        await kv.set(["followers"], y.actor, { id: y.actor });
+        await kv.set(["followers", y.actor], { id: y.actor });
         await acceptFollow(x, y, private_key);
         return new Response();
       } else if (y.type == 'Undo') {
