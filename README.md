@@ -1,3 +1,6 @@
+デプロイ先  
+https://tama-city.deno.dev/
+
 使い方
 
 鍵を作成
@@ -15,5 +18,5 @@ deno run -A --unstable-kv --unstable-cron tama.js
 https://tama-city.deno.dev/test
 
 マストドンでフォローするには左上の検索欄に  
-tama@tama-city.deno.dev
+event@tama-city.deno.dev
 と入力

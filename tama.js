@@ -47,7 +47,7 @@ async function updateEventData() {
 
 async function teiki() {
   const todayEvents = eventData.events.filter(event => event.opendays.includes(getYmd(new Date())));
-  const message = `本日のイベント\n${todayEvents.map(event => event.eventtitle).join("\n")}`;
+  const message = `本日のイベント<br><br><ul>${todayEvents.map(event => `<li>${event.eventtitle}</li>`).join("")}</ul>`;
   await addNote(message);
 }
 
