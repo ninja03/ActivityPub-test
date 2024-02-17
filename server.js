@@ -262,7 +262,9 @@ export async function signHeaders(res, strInbox, privateKey) {
 }
 
 export async function acceptFollow(x, y, privateKey) {
-  console.log("★acceptFollow", x, y, privateKey);
+  console.log("★acceptFollow x = ", x);
+  console.log("★acceptFollow y = ", y);
+  console.log("★privateKey = ", privateKey);
   const strId = crypto.randomUUID()
   const strInbox = x.inbox
   console.log("strInbox", strInbox);
