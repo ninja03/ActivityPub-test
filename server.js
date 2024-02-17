@@ -107,12 +107,16 @@ Deno.serve({
       }
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
-      const param = await getParam(request);
-      const x = await getInbox(param.actor);
-      console.log(param);
-      if (param.type == "Follow") {
-        await kv.set(["followers"], param.actor, { id: param.actor });
-        await acceptFollow(x, param, private_key);
+      const y = await getParam(request);
+      const x = await getInbox(y.actor);
+      console.log(y);
+      if (y.type == "Follow") {
+        await kv.set(["followers"], y.actor, { id: y.actor });
+        await acceptFollow(x, y, private_key);
+        return new Response();
+      } else if (y.type == 'Undo') {
+        await kv.delete(["followers", y.actor]);
+        return new Response();
       }
       // await writeLog("inbox", param);
       return await reply("./inbox.activity.json");
