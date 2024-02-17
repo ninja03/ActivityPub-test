@@ -1,7 +1,0 @@
-{
-  "@context": "https://www.w3.org/ns/activitystreams",
-  "summary": "inbox",
-  "type": "OrderedCollection",
-  "totalItems": 0,
-  "orderedItems": []
-}
