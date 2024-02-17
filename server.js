@@ -84,7 +84,7 @@ Deno.serve({
       const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
       const contents = JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
-        id: `${BASE_URL}/followers`,
+        id: `https://tama-city-test.deno.dev/followers`,
         type: 'OrderedCollection',
         first: {
           type: 'OrderedCollectionPage',
@@ -210,7 +210,7 @@ export async function postInbox(req, data, headers) {
   return res
 }
 
-export async function signHeaders(res, strName, strHost, strInbox, privateKey) {
+export async function signHeaders(res, strInbox, privateKey) {
   const strTime = new Date().toUTCString()
   const s = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(res)))
   const s256 = btoa(btos(s))
@@ -230,14 +230,14 @@ export async function signHeaders(res, strName, strHost, strInbox, privateKey) {
     Date: strTime,
     Digest: `SHA-256=${s256}`,
     Signature:
-      `keyId="https://${strHost}/u/${strName}",` +
+      `keyId="https://tama-city-test.deno.dev",` +
       `algorithm="rsa-sha256",` +
       `headers="(request-target) host date digest",` +
       `signature="${b64}"`,
     Accept: 'application/activity+json',
     'Content-Type': 'application/activity+json',
     'Accept-Encoding': 'gzip',
-    'User-Agent': `Minidon/0.0.0 (+https://${strHost}/)`,
+    'User-Agent': `Minidon/0.0.0 (+https://tama-city-test.deno.dev/)`,
   }
   return headers
 }
@@ -252,7 +252,7 @@ export async function acceptFollow(x, y, privateKey) {
     actor: `https://tama-city-test.deno.dev/`,
     object: y,
   }
-  const headers = await signHeaders(res, strName, strHost, strInbox, privateKey)
+  const headers = await signHeaders(res, strInbox, privateKey)
   await postInbox(strInbox, res, headers)
 }
 
