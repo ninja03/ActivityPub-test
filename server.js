@@ -50,7 +50,7 @@ const writeLog = async (name, param) => {
   await Deno.writeTextFile(fn, JSON.stringify(param, null, 2));
 };
 
-const baseid = "https://taisuke.fukuno.com/"
+const baseid = "https://tama-city-test.deno.dev/"
 
 const items = [
   new ActivityCreate(new Note(baseid + "id1", "name1", "content1", "2024-01-29T07:48:29Z", baseid)),

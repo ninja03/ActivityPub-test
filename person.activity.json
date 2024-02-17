@@ -2,7 +2,7 @@
     "@context": "https://www.w3.org/ns/activitystreams",
     "type": "Person",
     "id": "https://example.com/",
-    "name": "taisukef",
+    "name": "tama",
     "preferredUsername": "tama",
     "summary": "tama city event",
     "following": "https://example.com/following",
