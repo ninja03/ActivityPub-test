@@ -108,10 +108,11 @@ Deno.serve({
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const param = await getParam(request);
+      const x = await getInbox(y.actor);
       console.log(param);
       if (param.type == "Follow") {
         await kv.set(["followers"], param.actor, { id: param.actor });
-        await acceptFollow(param, y, private_key);
+        await acceptFollow(x, param, private_key);
       }
       // await writeLog("inbox", param);
       return await reply("./inbox.activity.json");
