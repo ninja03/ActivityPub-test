@@ -27,9 +27,9 @@ const getContextType = (fn) => {
   return "text/plain";
 };
 
-const reply = async (fn, data) => {
+const reply = async (fn, contents) => {
   const ctype = getContextType(fn);
-  const data = data ?? await Deno.readTextFile(fn);
+  const data = contents ?? await Deno.readTextFile(fn);
   const data2 = entrypoint ? data.replace(/https:\/\/example.com\//g, entrypoint) : data;
   return new Response(data2, { status: 200, headers: { "Content-Type": ctype } });
 };
