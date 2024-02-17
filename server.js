@@ -316,8 +316,10 @@ export async function acceptFollow(x, y, privateKey) {
 }
 
 export async function createNote(strId, x, y, privateKey) {
+  console.log("★createNote");
   const strTime = new Date().toISOString().substring(0, 19) + 'Z'
   const strInbox = x.inbox
+  console.log("createNote strInbox = ", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
     id: `https://tama-city-test.deno.dev/s/${strId}/activity`,
@@ -337,7 +339,9 @@ export async function createNote(strId, x, y, privateKey) {
       cc: [`https://tama-city-test.deno.dev/followers`],
     },
   }
+  console.log("createNote res", res);
   const headers = await signHeaders(res, strInbox, privateKey)
+  console.log("createNote headers", headers);
   await postInbox(strInbox, res, headers)
 }
 
