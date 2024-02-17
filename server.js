@@ -78,7 +78,7 @@ Deno.serve({
       const PRIVATE_KEY = await importprivateKey(ID_RSA);
   
       for await (const follower of kv.list({ prefix: ["followers"] })) {
-        const x = await getInbox(follower.id);
+        const x = await getInbox(follower.value.id);
         console.log(x);
         await createNote(messageId, x, messageBody, PRIVATE_KEY);
       }
