@@ -6,10 +6,7 @@ const kv = await Deno.openKv();
 
 const port = Deno.args[0] || 8000;
 
-let ID_RSA = Deno.env.get("ID_RSA");
-if (!ID_RSA) {
-  ID_RSA = Deno.readTextFileSync("id_rsa");
-}
+const ID_RSA = Deno.env.get("ID_RSA");
 
 let eventData;;
 async function updateEventData() {
