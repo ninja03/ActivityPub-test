@@ -108,7 +108,7 @@ Deno.serve({
       return replyAJSON(outbox);
     } else if (path == "/inbox") {
       const param = await getParam(request);
-      const x = await getInbox(y.actor);
+      const x = await getInbox(param.actor);
       console.log(param);
       if (param.type == "Follow") {
         await kv.set(["followers"], param.actor, { id: param.actor });
