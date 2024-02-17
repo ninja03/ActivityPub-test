@@ -69,7 +69,8 @@ Deno.serve({
   handler: async (request, info) => {
     const url = new URL(request.url);
     const path = url.pathname;
-    console.log(request, request.headers.accept, path);
+    // console.log(request, request.headers.accept, path);
+    console.log("-------" + path + "-------");
     if (path == "/add-note") {
       // const form = await request.formData();
       // const messageBody = form.get("message") ?? (new Date().toString() + "です");
