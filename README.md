@@ -1,20 +1,8 @@
-# ActivityPub-test for Deno
- 
-## Usage
+使い方
+enttrypoint.txtにURLを設定
 
-set your entrypoint on endpoint.txt
-```
-https://example.com/
-```
+投稿やフォローの機能
+https://github.com/yusukebe/minidon
 
-run on server with port number
-```sh
-deno run -A server.js 8015
-```
-
-## To check
-
-fetch with Accept application/acitivity+json
-```sh
-deno run -A client.js [url]
-```
+実行方法
+deno run -A --unstable-kv server.js 8015
