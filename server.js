@@ -6,11 +6,53 @@ const kv = await Deno.openKv();
 
 const port = Deno.args[0] || 8000;
 
+let ID_RSA = Deno.env.get("ID_RSA");
+if (!ID_RSA) {
+  ID_RSA = Deno.readTextFileSync("id_rsa");
+}
+
+let eventData;;
+async function updateEventData() {
+  eventData = eval(await (await fetch("https://www.city.tama.lg.jp/event.js")).text() + ";event_data");
+  console.log("update db!");
+}
+
+async function teiki() {
+  const todayEvents = eventData.events.filter(event => event.opendays.includes("2024/02/23"));
+  const message = `本日のイベント\n${todayEvents.map(event => event.eventtitle).join("\n")}`;
+  await addNote(message);
+  console.log("teiki!", message);
+}
+
+await updateEventData();
+await teiki();
+Deno.cron("data update", "0 0 * * *", updateEventData);
+Deno.cron("teiki housou", "* * * * *", teiki);
+
+async function addNote(messageBody) {
+  // const form = await request.formData();
+  // const messageBody = form.get("message") ?? (new Date().toString() + "です");
+  const messageId = crypto.randomUUID();
+  const PRIVATE_KEY = await importprivateKey(ID_RSA);
+
+  await kv.set(["messages", messageId], {
+    id: messageId,
+    body: messageBody
+  });
+
+  console.log("followers->");
+  for await (const follower of kv.list({ prefix: ["followers"] })) {
+    console.log("follower.value", follower.value);
+    const x = await getInbox(follower.value.id);
+    console.log("x", x);
+    await createNote(messageId, x, messageBody, PRIVATE_KEY);
+  }
+
+  console.log("<-followers");
+}
+
 const entrypoint = (await Deno.readTextFile("entrypoint.txt"))?.trim();
 if (!entrypoint) console.log("set your domain name on entrypoint.txt");
-
-const ID_RSA = Deno.env.get("ID_RSA");
-if (!ID_RSA)  console.log("set ID_RSA");
 
 const map = {
   ".activity.json": "application/activity+json; charset=utf-8",
@@ -79,26 +121,7 @@ Deno.serve({
         await kv.delete(follower.key);
       }
     } else if (path == "/add-note") {
-      // const form = await request.formData();
-      // const messageBody = form.get("message") ?? (new Date().toString() + "です");
-      const messageBody = "テスト!";
-      const messageId = crypto.randomUUID();
-      const PRIVATE_KEY = await importprivateKey(ID_RSA);
-
-      await kv.set(["messages", messageId], {
-        id: messageId,
-        body: messageBody
-      });
-
-      console.log("followers->");
-      for await (const follower of kv.list({ prefix: ["followers"] })) {
-        console.log("follower.value", follower.value);
-        const x = await getInbox(follower.value.id);
-        console.log("x", x);
-        await createNote(messageId, x, messageBody, PRIVATE_KEY);
-      }
-
-      console.log("<-followers");
+      await addNote("テスト！");
       return new Response("投稿しました");
     } else if (path == "/nodeinfo/2.1") {
       if (true) return new Response(null, { status: 404});
