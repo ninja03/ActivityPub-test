@@ -55,7 +55,7 @@ const writeLog = async (name, param) => {
   await Deno.writeTextFile(fn, JSON.stringify(param, null, 2));
 };
 
-const baseid = "https://tama-city-test.deno.dev/"
+const baseid = entrypoint;
 
 const items = [
   new ActivityCreate(new Note(baseid + "id1", "name1", "content1", "2024-01-29T07:48:29Z", baseid)),
@@ -138,14 +138,14 @@ Deno.serve({
       const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
       const content = JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
-        id: `https://tama-city-test.deno.dev/followers`,
+        id: `${entryPoint}followers`,
         type: 'OrderedCollection',
         first: {
           type: 'OrderedCollectionPage',
           totalItems: items.length,
-          partOf: `https://tama-city-test.deno.dev/followers`,
+          partOf: `${entryPoint}followers`,
           orderedItems: items,
-          id: `https://tama-city-test.deno.dev/followers?page=1`,
+          id: `${entryPoint}followers?page=1`,
         }
       });
       return await reply("./followers.activity.json", content);
@@ -290,14 +290,14 @@ export async function signHeaders(res, strInbox, privateKey) {
     Date: strTime,
     Digest: `SHA-256=${s256}`,
     Signature:
-      `keyId="https://tama-city-test.deno.dev",` +
+      `keyId="${entryPoint}",` +
       `algorithm="rsa-sha256",` +
       `headers="(request-target) host date digest",` +
       `signature="${b64}"`,
     Accept: 'application/activity+json',
     'Content-Type': 'application/activity+json',
     'Accept-Encoding': 'gzip',
-    'User-Agent': `Minidon/0.0.0 (+https://tama-city-test.deno.dev/)`,
+    'User-Agent': `Minidon/0.0.0 (+${entryPoint})`,
   }
   return headers
 }
@@ -311,9 +311,9 @@ export async function acceptFollow(x, y, privateKey) {
   console.log("strInbox", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://tama-city-test.deno.dev/s/${strId}`,
+    id: `${entryPoint}s/${strId}`,
     type: 'Accept',
-    actor: `https://tama-city-test.deno.dev/`,
+    actor: `${entryPoint}`,
     object: y,
   }
   const headers = await signHeaders(res, strInbox, privateKey)
@@ -329,21 +329,21 @@ export async function createNote(strId, x, y, privateKey) {
   console.log("createNote strInbox = ", strInbox);
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://tama-city-test.deno.dev/s/${strId}/activity`,
+    id: `${entryPoint}s/${strId}/activity`,
     type: 'Create',
-    actor: `https://tama-city-test.deno.dev`,
+    actor: `${entryPoint}`,
     published: strTime,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
-    cc: [`https://tama-city-test.deno.dev/followers`],
+    cc: [`${entryPoint}followers`],
     object: {
-      id: `https://tama-city-test.deno.dev/s/${strId}`,
+      id: `${entryPoint}s/${strId}`,
       type: 'Note',
-      attributedTo: `https://tama-city-test.deno.dev`,
+      attributedTo: `${entryPoint}`,
       content: y,
-      url: `https://tama-city-test.deno.dev/s/${strId}`,
+      url: `${entryPoint}s/${strId}`,
       published: strTime,
       to: ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: [`https://tama-city-test.deno.dev/followers`],
+      cc: [`${entryPoint}followers`],
     },
   }
   console.log("createNote res", res);
@@ -357,9 +357,9 @@ export async function deleteNote(x, y, privateKey) {
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://tama-city-test.deno.dev/s/${strId}/activity`,
+    id: `${entryPoint}s/${strId}/activity`,
     type: 'Delete',
-    actor: `https://tama-city-test.deno.dev`,
+    actor: `${entryPoint}`,
     object: {
       id: y,
       type: 'Note',
