@@ -81,12 +81,8 @@ Deno.serve({
     } else if (path == "/following") {
       return await reply("./following.activity.json");
     } else if (path == "/followers") {
-      // const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
-      const items = [
-        { id: "test1" },
-        { id: "test2" }
-      ];
-      const data = JSON.stringify({
+      const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
+      const contents = JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
         id: `${BASE_URL}/followers`,
         type: 'OrderedCollection',
@@ -95,10 +91,10 @@ Deno.serve({
           totalItems: items.length,
           partOf: `https://tama-city-test.deno.dev/followers`,
           orderedItems: items,
-          id: `https://example.com/followers?page=1`,
+          id: `https://tama-city-test.deno.dev/followers?page=1`,
         }
       });
-      return await reply("./followers.activity.json", data);
+      return await reply("./followers.activity.json", contents);
     } else if (path == "/outbox") {
       // return await reply("./outbox.activity.json");
       const n = url.searchParams.get("page");
