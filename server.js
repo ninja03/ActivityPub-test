@@ -71,7 +71,7 @@ Deno.serve({
     const path = url.pathname;
     console.log(request, request.headers.accept, path);
     if (path == "/add-note") {
-      const form = await req.formData();
+      const form = await request.formData();
       const messageId = crypto.randomUUID();
       const PRIVATE_KEY = await importprivateKey(ID_RSA);
       const messageBody = form.get("message") ?? (new Date().toString() + "です");
