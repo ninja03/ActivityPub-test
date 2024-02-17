@@ -3,6 +3,8 @@
 
 ・https://github.com/code4fukui/ActivityPub-test
 ・https://github.com/yusukebe/minidon
+
+deno run -A --unstable-kv --unstable-cron --watch tama.js
 */
 
 import { decodeBase64 } from "https://deno.land/std@0.215.0/encoding/base64.ts";
@@ -15,23 +17,25 @@ const kv = await Deno.openKv();
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   console.log("-------" + url.pathname + "-------");
-  if (url.pathname == "/reset") {
-    return await resetHandler(req);
-  } else if (url.pathname == "/add-note") {
-    return await addNoteHandler(req);
-  } else if (url.pathname == "/") {
-    return await rootHandler(req);
+  if (url.pathname == "/") {
+    return await topHandler(req);
   } else if (url.pathname == "/.well-known/webfinger") {
     return webfingerHandler(req);
-  } else if (url.pathname == "/followers") {
+  } else if (url.pathname == "/u/event") {
+    return await rootHandler(req);
+  } else if (url.pathname == "/u/event/followers") {
     return await followersHandler(req);
-  } else if (url.pathname == "/inbox") {
+  } else if (url.pathname == "/u/event/inbox") {
     return await inboxHandler(req);
-  } else if (url.pathname == "/icon.png") {
+  } else if (url.pathname == "/u/event/icon.png") {
     return new Response(
       decodeBase64(ICON_DATA),
       { headers: { "Content-Type": "image/png" } }
     );
+  } else if (url.pathname == "/reset") {
+    return await resetHandler(req);
+  } else if (url.pathname == "/add-note") {
+    return await addNoteHandler(req);
   }
   return new Response(null, { status: 404 });
 });
@@ -68,14 +72,56 @@ await updateEventData();
 Deno.cron("data update", "0 0 * * *", updateEventData);
 Deno.cron("teiki housou", "0 * * * *", teiki);
 
+async function topHandler(req) {
+  return new Response(`
+    <html lang="ja">
+    <head>
+      <meta charset="utf-8">
+      <title>たまイベント</title>
+      <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>🕊</text></svg>">
+      <style>
+        a {
+          text-decoration: none;
+        }
+        body {
+          background-color: #F0F0FF;
+        }
+        .title {
+          text-align: center;
+        }
+        .main {
+          background-color: white;
+          padding: 2em;
+          border-radius: 1em;
+          width: 480px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="title">たまイベント</div><br>
+      <div class="main">
+        フォローしてイベント情報を得よう！<br>
+        event@tama-city.deno.dev
+      </div>
+    </body>
+    </html>
+  `, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8"
+    }
+  });
+}
+
 function webfingerHandler(req) {
   return Response.json({
-    "subject": `acct:tama@${domain}`,
+    "subject": `acct:event@${domain}`,
     "links": [
       {
         "rel":  "self",
         "type": "application/activity+json",
-        "href": `https://${entrypoint}/`
+        "href": `${entrypoint}u/event`
       }
     ]
   }, {
@@ -107,23 +153,23 @@ async function rootHandler(req) {
   const public_key_pem = await exportPublicKey(PUBLIC_KEY)
   return Response.json({
     '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
-    "id": entrypoint,
+    "id": `${entrypoint}u/event`,
     "type": "Person",
-    "inbox": `${entrypoint}inbox`,
-    "followers": `${entrypoint}followers`,
-    "preferredUsername": "tama",
-    "name": "tama",
-    "url": "${entrypoint}",
+    "inbox": `${entrypoint}u/event/inbox`,
+    "followers": `${entrypoint}u/event/followers`,
+    "preferredUsername": "たまイベント",
+    "name": "たまイベント",
+    "url": `${entrypoint}u/event`,
     publicKey: {
-      id: `${entrypoint}`,
+      id: `${entrypoint}u/event`,
       type: 'Key',
-      owner: `${entrypoint}`,
+      owner: `${entrypoint}u/event`,
       publicKeyPem: public_key_pem,
     },
     "icon": {
       "type": "Image",
-      "mediaType": "image/webp",
-      "url": "${entrypoint}icon.png"
+      "mediaType": "image/png",
+      "url": `${entrypoint}u/event/icon.png`
     }
   }, {
     headers: {
@@ -136,14 +182,14 @@ async function followersHandler() {
   const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
   return Response.json({
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entrypoint}followers`,
+    id: `${entrypoint}u/event/followers`,
     type: 'OrderedCollection',
     first: {
       type: 'OrderedCollectionPage',
       totalItems: items.length,
-      partOf: `${entrypoint}followers`,
+      partOf: `${entrypoint}u/event/followers`,
       orderedItems: items,
-      id: `${entrypoint}followers?page=1`,
+      id: `${entrypoint}u/event/followers?page=1`,
     }
   }, {
     headers: {
@@ -158,13 +204,15 @@ async function inboxHandler(req) {
   const x = await getInbox(y.actor);
   const private_key = await importprivateKey(ID_RSA);
   
-  if (y.type == "Follow") {
-    await kv.set(["followers", y.actor], { id: y.actor });
-    await acceptFollow(x, y, private_key);
-    return new Response();
-  } else if (y.type == 'Undo') {
-    await kv.delete(["followers", y.actor]);
-    return new Response();
+  if (req.method == "POST") {
+    if (y.type == "Follow") {
+      await kv.set(["followers", y.actor], { id: y.actor });
+      await acceptFollow(x, y, private_key);
+      return new Response();
+    } else if (y.type == 'Undo') {
+      await kv.delete(["followers", y.actor]);
+      return new Response();
+    }
   }
   return new Response(null, { status: 400 });
 }
@@ -272,7 +320,7 @@ export async function signHeaders(res, strInbox, privateKey) {
     Date: strTime,
     Digest: `SHA-256=${s256}`,
     Signature:
-      `keyId="${entrypoint}",` +
+      `keyId="${entrypoint}u/event",` +
       `algorithm="rsa-sha256",` +
       `headers="(request-target) host date digest",` +
       `signature="${b64}"`,
@@ -289,9 +337,9 @@ export async function acceptFollow(x, y, privateKey) {
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entrypoint}s/${strId}`,
+    id: `${entrypoint}u/event/s/${strId}`,
     type: 'Accept',
-    actor: `${entrypoint}`,
+    actor: `${entrypoint}u/event`,
     object: y,
   }
   const headers = await signHeaders(res, strInbox, privateKey)
@@ -303,21 +351,21 @@ export async function createNote(strId, x, y, privateKey, hostname) {
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `${entrypoint}s/${strId}/activity`,
+    id: `${entrypoint}u/event/s/${strId}/activity`,
     type: 'Create',
-    actor: `${entrypoint}`,
+    actor: `${entrypoint}u/event`,
     published: strTime,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
-    cc: [`${entrypoint}followers`],
+    cc: [`${entrypoint}u/event/followers`],
     object: {
-      id: `${entrypoint}s/${strId}`,
+      id: `${entrypoint}u/event/s/${strId}`,
       type: 'Note',
-      attributedTo: `${entrypoint}`,
+      attributedTo: `${entrypoint}u/event`,
       content: y,
-      url: `${entrypoint}s/${strId}`,
+      url: `${entrypoint}u/event/s/${strId}`,
       published: strTime,
       to: ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: [`${entrypoint}followers`],
+      cc: [`${entrypoint}u/event/followers`],
     },
   }
   const headers = await signHeaders(res, strInbox, privateKey)
