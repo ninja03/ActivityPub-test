@@ -118,7 +118,7 @@ Deno.serve({
           publicKeyPem: public_key_pem,
         },
       };
-      return await reply("./person.activity.json", content);
+      return await reply("./person.activity.json", JSON.stringify(content));
     } else if (path == "/.well-known/host-meta") {
       return await reply("./host-meta.xml");
     } else if (path == "/.well-known/webfinger") {
@@ -127,7 +127,7 @@ Deno.serve({
       return await reply("./following.activity.json");
     } else if (path == "/followers") {
       const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
-      const contents = JSON.stringify({
+      const content = JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
         id: `https://tama-city-test.deno.dev/followers`,
         type: 'OrderedCollection',
@@ -139,7 +139,7 @@ Deno.serve({
           id: `https://tama-city-test.deno.dev/followers?page=1`,
         }
       });
-      return await reply("./followers.activity.json", contents);
+      return await reply("./followers.activity.json", content);
     } else if (path == "/outbox") {
       // return await reply("./outbox.activity.json");
       const n = url.searchParams.get("page");
