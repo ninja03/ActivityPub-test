@@ -74,10 +74,15 @@ Deno.serve({
     if (path == "/add-note") {
       // const form = await request.formData();
       // const messageBody = form.get("message") ?? (new Date().toString() + "です");
-      const messageBody = (new Date().toString() + "です");
+      const messageBody = "テスト!";
       const messageId = crypto.randomUUID();
       const PRIVATE_KEY = await importprivateKey(ID_RSA);
-  
+
+      await kv.set(["messages", messageBody], {
+        id: messageId,
+        body: messageBody
+      });
+
       console.log("followers->");
       for await (const follower of kv.list({ prefix: ["followers"] })) {
         console.log("follower.value", follower.value);
@@ -85,6 +90,7 @@ Deno.serve({
         console.log("x", x);
         await createNote(messageId, x, messageBody, PRIVATE_KEY);
       }
+
       console.log("<-followers");
       return new Response("投稿しました");
     }if (path == "/nodeinfo/2.1") {
