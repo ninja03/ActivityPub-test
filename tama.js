@@ -7,6 +7,8 @@
 deno run -A --unstable-kv --unstable-cron --watch tama.js
 */
 
+import { escape } from "https://deno.land/std@0.216.0/html/mod.ts";
+
 const domain = "tama-city.deno.dev";
 const entrypoint = "https://tama-city.deno.dev/";
 
@@ -16,7 +18,7 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   console.log("-------" + url.pathname + "-------");
   if (url.pathname == "/") {
-    return await topHandler(req);
+    return topHandler(req);
   } else if (url.pathname == "/.well-known/webfinger") {
     return webfingerHandler(req);
   } else if (url.pathname == "/u/event") {
@@ -33,21 +35,67 @@ Deno.serve(async (req) => {
   return new Response(null, { status: 404 });
 });
 
-let eventData;;
+// 起動時にイベント情報を取得
+let eventData;
+await updateEventData();
+
+Deno.cron("data update", "0 0 * * *", updateEventData);
+Deno.cron("teiki housou", "0 * * * *", teiki);
+
+/**
+ * イベント情報を取ってきてアップデート
+ */
 async function updateEventData() {
-  eventData = eval(await (await fetch("https://www.city.tama.lg.jp/event.js")).text() + ";event_data");
+  const tamaEventApi = "https://www.city.tama.lg.jp/event.js";
+  const eventJs = await (await fetch(tamaEventApi)).text();
+  try {
+    const eventDataTmp = eval(`${eventJs};event_data`);
+    // 昨日以前のイベントを取り除く
+    const today = getYmd(new Date());
+    eventData = eventDataTmp.events
+      .filter(event => event.opendays.some(day => day >= today))
+      .map(event => ({
+        title: event.eventtitle,
+        opendays: event.opendays.filter(day => day >= today) }
+      ));
+    console.log("イベントDB更新完了");
+  } catch (e) {
+    console.log(e);
+  }
 }
 
+/**
+ * イベントの情報を定期ツイートする
+ */
 async function teiki() {
-  const todayEvents = eventData.events.filter(event => event.opendays.includes(getYmd(new Date())));
-  const message = `本日のイベント<br><br><ul>${todayEvents.map(event => `<li>${event.eventtitle}</li>`).join("")}</ul>`;
+  const today = getYmd(new Date());
+  const todayEvents = eventData.filter(event => event.opendays.includes(today));
+  const eventsStr = todayEvents.map(event => `<li>${escape(event.title)}</li>`).join("");
+  const message = `本日のイベント<br><br><ul>${eventsStr}</ul>`;
+  console.log("投稿: " + message);
   await addNote(message);
 }
 
+/**
+ * Date型を「2024/02/18」などに変換する
+ * @param {Date} date 
+ * @returns {string}
+ */
+function getYmd(date) {
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  
+  return `${year}/${month}/${day}`;
+}
+
+/**
+ * ツイートする
+ * @param {string} messageBody 
+ */
 async function addNote(messageBody) {
-  const ID_RSA = Deno.env.get("ID_RSA");
   const messageId = crypto.randomUUID();
-  const PRIVATE_KEY = await importprivateKey(ID_RSA);
+  const PRIVATE_KEY = await getPrivateKey();
 
   await kv.set(["messages", messageId], {
     id: messageId,
@@ -60,12 +108,12 @@ async function addNote(messageBody) {
   }
 }
 
-await updateEventData();
-
-Deno.cron("data update", "0 0 * * *", updateEventData);
-Deno.cron("teiki housou", "0 * * * *", teiki);
-
-async function topHandler(req) {
+/**
+ * トップページ（フォロー方法の案内）
+ * @param {Request} req 
+ * @returns {Response}
+ */
+function topHandler(req) {
   return new Response(`
     <html lang="ja">
     <head>
@@ -109,6 +157,13 @@ async function topHandler(req) {
   });
 }
 
+/**
+ * マストドンなどでevent@tama-city.devと検索したときに来るところ
+ * hrefの先で詳細情報を返す
+ * https://tama-city.deno.dev/.well-known/webfinger?resource=acct:event@tama-city.dev
+ * @param {Request} req
+ * @return {Response}
+ */
 function webfingerHandler(req) {
   return Response.json({
     "subject": `acct:event@${domain}`,
@@ -126,6 +181,11 @@ function webfingerHandler(req) {
   });
 }
 
+/**
+ * DBをリセット
+ * @param {*} req 
+ * @returns 
+ */
 async function resetHandler(req) {
   for await (const message of kv.list({ prefix: ["messages"]})) {
     await kv.delete(message.key);
@@ -136,16 +196,23 @@ async function resetHandler(req) {
   return new Response("リセットしました");
 }
 
+/**
+ * 動作確認用テスト
+ * @param {Request} req 
+ * @returns {Promise<Response>}
+ */
 async function testHandler(req) {
   await teiki();
   return new Response("投稿しました");
 }
 
+/**
+ * ユーザの情報 (/u/event)
+ * @param {Request} req 
+ * @returns {Promise<Response>}
+ */
 async function rootHandler(req) {
-  const ID_RSA = Deno.env.get("ID_RSA");
-  const PRIVATE_KEY = await importprivateKey(ID_RSA)
-  const PUBLIC_KEY = await privateKeyToPublicKey(PRIVATE_KEY)
-  const public_key_pem = await exportPublicKey(PUBLIC_KEY)
+  const public_key_pem = await getPublicKey();
   return Response.json({
     '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
     "id": `${entrypoint}u/event`,
@@ -173,6 +240,11 @@ async function rootHandler(req) {
   });
 }
 
+/**
+ * フォロワーリスト (/u/event/followers)
+ * @param {Request} req 
+ * @returns {Promise<Response>}
+ */
 async function followersHandler() {
   const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
   return Response.json({
@@ -193,11 +265,15 @@ async function followersHandler() {
   });
 }
 
+/**
+ * マストドンでフォローなどしたときの投稿先inbox (/u/event/inbox)
+ * @param {Request} req 
+ * @returns {Promise<Response>}
+ */
 async function inboxHandler(req) {
-  const ID_RSA = Deno.env.get("ID_RSA");
   const y = await req.json()
   const x = await getInbox(y.actor);
-  const private_key = await importprivateKey(ID_RSA);
+  const private_key = await getPrivateKey();
   
   if (req.method == "POST") {
     if (y.type == "Follow") {
@@ -212,15 +288,15 @@ async function inboxHandler(req) {
   return new Response(null, { status: 400 });
 }
 
-export function stob(s) {
+function stob(s) {
   return Uint8Array.from(s, (c) => c.charCodeAt(0))
 }
 
-export function btos(b) {
+function btos(b) {
   return String.fromCharCode(...new Uint8Array(b))
 }
 
-export async function importprivateKey(pem) {
+async function importprivateKey(pem) {
   const pemHeader = '-----BEGIN PRIVATE KEY-----'
   const pemFooter = '-----END PRIVATE KEY-----'
   if (pem.startsWith('"')) pem = pem.slice(1)
@@ -242,7 +318,7 @@ export async function importprivateKey(pem) {
   return r
 }
 
-export async function privateKeyToPublicKey(key) {
+async function privateKeyToPublicKey(key) {
   const jwk = await crypto.subtle.exportKey('jwk', key)
   if ('kty' in jwk) {
     delete jwk.d
@@ -267,7 +343,7 @@ export async function privateKeyToPublicKey(key) {
   return r
 }
 
-export async function exportPublicKey(key) {
+async function exportPublicKey(key) {
   const der = await crypto.subtle.exportKey('spki', key)
   if ('byteLength' in der) {
     let pemContents = btoa(btos(der))
@@ -282,7 +358,7 @@ export async function exportPublicKey(key) {
   }
 }
 
-export async function getInbox(req) {
+async function getInbox(req) {
   const res = await fetch(req, {
     method: 'GET',
     headers: { Accept: 'application/activity+json' },
@@ -290,12 +366,12 @@ export async function getInbox(req) {
   return res.json()
 }
 
-export async function postInbox(req, data, headers) {
+async function postInbox(req, data, headers) {
   const res = await fetch(req, { method: 'POST', body: JSON.stringify(data), headers })
   return res
 }
 
-export async function signHeaders(res, strInbox, privateKey) {
+async function signHeaders(res, strInbox, privateKey) {
   const strTime = new Date().toUTCString()
   const s = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(res)))
   const s256 = btoa(btos(s))
@@ -327,7 +403,7 @@ export async function signHeaders(res, strInbox, privateKey) {
   return headers;
 }
 
-export async function acceptFollow(x, y, privateKey) {
+async function acceptFollow(x, y, privateKey) {
   const strId = crypto.randomUUID()
   const strInbox = x.inbox
   const res = {
@@ -341,7 +417,7 @@ export async function acceptFollow(x, y, privateKey) {
   await postInbox(strInbox, res, headers)
 }
 
-export async function createNote(strId, x, y, privateKey, hostname) {
+async function createNote(strId, x, y, privateKey, hostname) {
   const strTime = new Date().toISOString().substring(0, 19) + 'Z'
   const strInbox = x.inbox
   const res = {
@@ -367,10 +443,23 @@ export async function createNote(strId, x, y, privateKey, hostname) {
   await postInbox(strInbox, res, headers)
 }
 
-function getYmd(date) {
-  const year = date.getFullYear().toString();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  
-  return `${year}/${month}/${day}`;
+
+/**
+ * 秘密鍵
+ * @returns {Promise<string>}
+ */
+async function getPrivateKey() {
+  const ID_RSA = Deno.env.get("ID_RSA");
+  return await importprivateKey(ID_RSA);
+}
+
+/**
+ * 公開鍵
+ * @returns {Promise<string>}
+ */
+async function getPublicKey() {
+  const ID_RSA = Deno.env.get("ID_RSA");
+  const PRIVATE_KEY = await importprivateKey(ID_RSA)
+  const PUBLIC_KEY = await privateKeyToPublicKey(PRIVATE_KEY)
+  return await exportPublicKey(PUBLIC_KEY);
 }
