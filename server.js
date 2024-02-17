@@ -70,7 +70,17 @@ Deno.serve({
     const url = new URL(request.url);
     const path = url.pathname;
     console.log(request, request.headers.accept, path);
-    if (path == "/nodeinfo/2.1") {
+    if (path == "/add-note") {
+      const form = await req.formData();
+      const messageId = crypto.randomUUID();
+      const PRIVATE_KEY = await importprivateKey(ID_RSA);
+      const messageBody = form.get("message") ?? (new Date().toString() + "です");
+  
+      for await (const follower of kv.list({ prefix: ["followers"] })) {
+        const x = await getInbox(follower.id);
+        await createNote(messageId, x, messageBody, PRIVATE_KEY);
+      }
+    }if (path == "/nodeinfo/2.1") {
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
       return await reply("./person.activity.json");
@@ -256,46 +266,46 @@ export async function acceptFollow(x, y, privateKey) {
   await postInbox(strInbox, res, headers)
 }
 
-export async function createNote(strId, strName, strHost, x, y, privateKey) {
+export async function createNote(strId, x, y, privateKey) {
   const strTime = new Date().toISOString().substring(0, 19) + 'Z'
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://${strHost}/u/${strName}/s/${strId}/activity`,
+    id: `https://tama-city-test.deno.dev/s/${strId}/activity`,
     type: 'Create',
-    actor: `https://${strHost}/u/${strName}`,
+    actor: `https://tama-city-test.deno.dev`,
     published: strTime,
     to: ['https://www.w3.org/ns/activitystreams#Public'],
-    cc: [`https://${strHost}/u/${strName}/followers`],
+    cc: [`https://tama-city-test.deno.dev/followers`],
     object: {
-      id: `https://${strHost}/u/${strName}/s/${strId}`,
+      id: `https://tama-city-test.deno.dev/s/${strId}`,
       type: 'Note',
-      attributedTo: `https://${strHost}/u/${strName}`,
+      attributedTo: `https://tama-city-test.deno.dev`,
       content: y,
-      url: `https://${strHost}/u/${strName}/s/${strId}`,
+      url: `https://tama-city-test.deno.dev/s/${strId}`,
       published: strTime,
       to: ['https://www.w3.org/ns/activitystreams#Public'],
-      cc: [`https://${strHost}/u/${strName}/followers`],
+      cc: [`https://tama-city-test.deno.dev/followers`],
     },
   }
-  const headers = await signHeaders(res, strName, strHost, strInbox, privateKey)
+  const headers = await signHeaders(res, strInbox, privateKey)
   await postInbox(strInbox, res, headers)
 }
 
-export async function deleteNote(strName, strHost, x, y, privateKey) {
+export async function deleteNote(x, y, privateKey) {
   const strId = crypto.randomUUID()
   const strInbox = x.inbox
   const res = {
     '@context': 'https://www.w3.org/ns/activitystreams',
-    id: `https://${strHost}/u/${strName}/s/${strId}/activity`,
+    id: `https://tama-city-test.deno.dev/s/${strId}/activity`,
     type: 'Delete',
-    actor: `https://${strHost}/u/${strName}`,
+    actor: `https://tama-city-test.deno.dev`,
     object: {
       id: y,
       type: 'Note',
     },
   }
-  const headers = await signHeaders(res, strName, strHost, strInbox, privateKey)
+  const headers = await signHeaders(res, strInbox, privateKey)
   await postInbox(strInbox, res, headers)
 }
 
