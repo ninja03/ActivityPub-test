@@ -94,6 +94,7 @@ Deno.serve({
       console.log("<-followers");
       return new Response("投稿しました");
     }if (path == "/nodeinfo/2.1") {
+      if (true) return new Response(null, { status: 404});
       return await reply("./nodeinfo.json");
     } else if (path == "/") {
       const PRIVATE_KEY = await importprivateKey(ID_RSA)
@@ -101,35 +102,37 @@ Deno.serve({
       const public_key_pem = await exportPublicKey(PUBLIC_KEY)
 
       const content = {
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "type": "Person",
+        '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
         "id": "https://example.com/",
-        "name": "tama",
-        "preferredUsername": "tama",
-        "summary": "tama city event",
-        "following": "https://example.com/following",
-        "followers": "https://example.com/followers",
+        "type": "Person",
         "inbox": "https://example.com/inbox",
-        "outbox": "https://example.com/outbox",
+        "followers": "https://example.com/followers",
+        "preferredUsername": "tama",
+        "name": "tama",
         "url": "https://example.com/",
-        "icon": {
-          "type": "Image",
-          "mediaType": "image/webp",
-          "url": "https://example.com/icon.webp"
-        },
         publicKey: {
           id: `https://example.com/`,
           type: 'Key',
           owner: `https://example.com`,
           publicKeyPem: public_key_pem,
         },
+        "icon": {
+          "type": "Image",
+          "mediaType": "image/webp",
+          "url": "https://example.com/icon.webp"
+        }
+        // "summary": "tama city event",
+        // "following": "https://example.com/following",
+        // "outbox": "https://example.com/outbox",
       };
       return await reply("./person.activity.json", JSON.stringify(content));
     } else if (path == "/.well-known/host-meta") {
+      if (true) return new Response(null, { status: 404});
       return await reply("./host-meta.xml");
     } else if (path == "/.well-known/webfinger") {
       return await reply("./webfinger.jrd.json");
     } else if (path == "/following") {
+      if (true) return new Response(null, { status: 404});
       return await reply("./following.activity.json");
     } else if (path == "/followers") {
       const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
@@ -147,6 +150,7 @@ Deno.serve({
       });
       return await reply("./followers.activity.json", content);
     } else if (path == "/outbox") {
+      if (true) return new Response(null, { status: 404});
       // return await reply("./outbox.activity.json");
       const n = url.searchParams.get("page");
       if (n !== undefined) {
@@ -169,10 +173,13 @@ Deno.serve({
         return new Response();
       }
       // await writeLog("inbox", param);
+      return new Response(null, { status: 500});
       return await reply("./inbox.activity.json");
     } else if (path == "/outbox") {
+      if (true) return new Response(null, { status: 404});
       return await reply("./outbox.activity.json");
     } else if (path == "/items/note.1.activity.json") {
+      if (true) return new Response(null, { status: 404});
       return await reply("./note.1.activity.json");
     } else {
       return handleWeb("static", request, path, info);
