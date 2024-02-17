@@ -113,7 +113,7 @@ Deno.serve({
         publicKey: {
           id: `https://example.com/`,
           type: 'Key',
-          owner: `https://example.com`,
+          owner: `https://example.com/`,
           publicKeyPem: public_key_pem,
         },
         "icon": {
