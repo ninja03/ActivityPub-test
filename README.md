@@ -12,8 +12,7 @@ deno deployにデプロイ
 deno run -A --unstable-kv --unstable-cron tama.js
 
 テスト投稿  
-「テスト！」と投稿される
-https://tama-city.deno.dev/add-note
+https://tama-city.deno.dev/test
 
 マストドンでフォローするには左上の検索欄に  
 tama@tama-city.deno.dev
