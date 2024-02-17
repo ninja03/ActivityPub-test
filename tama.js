@@ -102,8 +102,10 @@ async function topHandler(req) {
     <body>
       <div class="title">たまイベント</div><br>
       <div class="main">
-        フォローしてイベント情報を得よう！<br>
-        event@tama-city.deno.dev
+        ActivitiyPubに対応したSNS(Mastdon)でフォローしてイベント情報を得よう！<br>
+        event@tama-city.deno.dev<br>
+        <br>
+        <a href="https://dash.deno.com/playground/tama-city">オープンソースです</a>
       </div>
     </body>
     </html>
