@@ -18,19 +18,36 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   console.log("-------" + url.pathname + "-------");
   if (url.pathname == "/") {
-    return topHandler(req);
+    return topHandler();
+  } else if (url.pathname == "/nodeinfo/2.1") {
+    return Response.json({
+      "openRegistrations": false,
+      "protocols": [
+        "activitypub"
+      ],
+      "software": {
+        "name": "ActivityPub-test",
+        "version": "0.1.0"
+      },
+      "usage": {
+        "users": {
+          "total": 1
+        }
+      },
+      "version": "2.1"
+    });
   } else if (url.pathname == "/.well-known/webfinger") {
-    return webfingerHandler(req);
+    return webfingerHandler();
   } else if (url.pathname == "/u/event") {
-    return await rootHandler(req);
+    return await rootHandler();
   } else if (url.pathname == "/u/event/followers") {
-    return await followersHandler(req);
+    return await followersHandler();
   } else if (url.pathname == "/u/event/inbox") {
     return await inboxHandler(req);
   } else if (url.pathname == "/reset") {
-    return await resetHandler(req);
+    return await resetHandler();
   } else if (url.pathname == "/test") {
-    return await testHandler(req);
+    return await testHandler();
   }
   return new Response(null, { status: 404 });
 });
@@ -42,9 +59,7 @@ await updateEventData();
 Deno.cron("data update", "0 0 * * *", updateEventData);
 Deno.cron("teiki housou", "0 * * * *", teiki);
 
-/**
- * イベント情報を取ってきてアップデート
- */
+/** イベント情報を取ってきてアップデート */
 async function updateEventData() {
   const tamaEventApi = "https://www.city.tama.lg.jp/event.js";
   const eventJs = await (await fetch(tamaEventApi)).text();
@@ -64,9 +79,7 @@ async function updateEventData() {
   }
 }
 
-/**
- * イベントの情報を定期ツイートする
- */
+/** イベントの情報を定期ツイートする */
 async function teiki() {
   const today = getYmd(new Date());
   const todayEvents = eventData.filter(event => event.opendays.includes(today));
@@ -76,11 +89,7 @@ async function teiki() {
   await addNote(message);
 }
 
-/**
- * Date型を「2024/02/18」などに変換する
- * @param {Date} date 
- * @returns {string}
- */
+/** Date型を「2024/02/18」などに変換する */
 function getYmd(date) {
   const year = date.getFullYear().toString();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -89,10 +98,7 @@ function getYmd(date) {
   return `${year}/${month}/${day}`;
 }
 
-/**
- * ツイートする
- * @param {string} messageBody 
- */
+/** ツイートする */
 async function addNote(messageBody) {
   const messageId = crypto.randomUUID();
   const PRIVATE_KEY = await getPrivateKey();
@@ -102,18 +108,14 @@ async function addNote(messageBody) {
     body: messageBody
   });
 
-  for await (const follower of kv.list({ prefix: ["followers"] })) {
+  for await (const follower of kv.list<Follower>({ prefix: ["followers"] })) {
     const x = await getInbox(follower.value.id);
     await createNote(messageId, x, messageBody, PRIVATE_KEY);
   }
 }
 
-/**
- * トップページ（フォロー方法の案内）
- * @param {Request} req 
- * @returns {Response}
- */
-function topHandler(req) {
+/** トップページ（フォロー方法の案内）*/
+function topHandler() {
   return new Response(`
     <html lang="ja">
     <head>
@@ -161,10 +163,8 @@ function topHandler(req) {
  * マストドンなどでevent@tama-city.devと検索したときに来るところ
  * hrefの先で詳細情報を返す
  * https://tama-city.deno.dev/.well-known/webfinger?resource=acct:event@tama-city.dev
- * @param {Request} req
- * @return {Response}
  */
-function webfingerHandler(req) {
+function webfingerHandler() {
   return Response.json({
     "subject": `acct:event@${domain}`,
     "links": [
@@ -181,12 +181,8 @@ function webfingerHandler(req) {
   });
 }
 
-/**
- * DBをリセット
- * @param {*} req 
- * @returns 
- */
-async function resetHandler(req) {
+/** DBをリセット */
+async function resetHandler() {
   for await (const message of kv.list({ prefix: ["messages"]})) {
     await kv.delete(message.key);
   }
@@ -196,22 +192,34 @@ async function resetHandler(req) {
   return new Response("リセットしました");
 }
 
-/**
- * 動作確認用テスト
- * @param {Request} req 
- * @returns {Promise<Response>}
- */
-async function testHandler(req) {
+/** 動作確認用テスト */
+async function testHandler() {
   await teiki();
   return new Response("投稿しました");
 }
 
-/**
- * ユーザの情報 (/u/event)
- * @param {Request} req 
- * @returns {Promise<Response>}
- */
-async function rootHandler(req) {
+/** ユーザの情報 (/u/event) */
+async function rootHandler() {
+  if (true) {
+    return Response.json({
+      "@context": "https://www.w3.org/ns/activitystreams",
+      "type": "Person",
+      "id": "https://tama-city.deno.dev/",
+      "name": "e-event",
+      "preferredUsername": "e-event",
+      "summary": "my simple e-event",
+      "following": "https://tama-city.deno.dev/following",
+      "followers": "https://tama-city.deno.dev/followers",
+      "inbox": "https://tama-city.deno.dev/inbox",
+      "outbox": "https://tama-city.deno.dev/outbox",
+      "url": "https://tama-city.deno.dev/",
+      "icon": {
+          "type": "Image",
+          "mediaType": "image/webp",
+          "url": "https://tama-city.deno.dev/icon.webp"
+      }
+    });
+  }
   const public_key_pem = await getPublicKey();
   return Response.json({
     '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
@@ -222,11 +230,11 @@ async function rootHandler(req) {
     "preferredUsername": "たまイベント",
     "name": "たまイベント",
     "url": `${entrypoint}u/event`,
-    publicKey: {
-      id: `${entrypoint}u/event`,
-      type: 'Key',
-      owner: `${entrypoint}u/event`,
-      publicKeyPem: public_key_pem,
+    "publicKey": {
+      "id": `${entrypoint}u/event`,
+      "type": 'Key',
+      "owner": `${entrypoint}u/event`,
+      "publicKeyPem": public_key_pem,
     },
     "icon": {
       "type": "Image",
@@ -240,11 +248,7 @@ async function rootHandler(req) {
   });
 }
 
-/**
- * フォロワーリスト (/u/event/followers)
- * @param {Request} req 
- * @returns {Promise<Response>}
- */
+/** フォロワーリスト (/u/event/followers) */
 async function followersHandler() {
   const items = (await Array.fromAsync(kv.list({ prefix: ["followers"]}))).map(a => a.value.id);
   return Response.json({
@@ -265,11 +269,7 @@ async function followersHandler() {
   });
 }
 
-/**
- * マストドンでフォローなどしたときの投稿先inbox (/u/event/inbox)
- * @param {Request} req 
- * @returns {Promise<Response>}
- */
+/** マストドンでフォローなどしたときの投稿先inbox (/u/event/inbox) */
 async function inboxHandler(req) {
   const y = await req.json()
   const x = await getInbox(y.actor);
@@ -417,7 +417,7 @@ async function acceptFollow(x, y, privateKey) {
   await postInbox(strInbox, res, headers)
 }
 
-async function createNote(strId, x, y, privateKey, hostname) {
+async function createNote(strId, x, y, privateKey) {
   const strTime = new Date().toISOString().substring(0, 19) + 'Z'
   const strInbox = x.inbox
   const res = {
@@ -444,19 +444,13 @@ async function createNote(strId, x, y, privateKey, hostname) {
 }
 
 
-/**
- * 秘密鍵
- * @returns {Promise<string>}
- */
+/** 秘密鍵 */
 async function getPrivateKey() {
   const ID_RSA = Deno.env.get("ID_RSA");
   return await importprivateKey(ID_RSA);
 }
 
-/**
- * 公開鍵
- * @returns {Promise<string>}
- */
+/** 公開鍵 */
 async function getPublicKey() {
   const ID_RSA = Deno.env.get("ID_RSA");
   const PRIVATE_KEY = await importprivateKey(ID_RSA)
